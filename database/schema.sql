@@ -1,0 +1,91 @@
+CREATE DATABASE IF NOT EXISTS novablog DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+USE novablog;
+
+CREATE TABLE IF NOT EXISTS sys_user (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(80) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    display_name VARCHAR(120) NOT NULL,
+    role VARCHAR(30) NOT NULL DEFAULT 'ADMIN',
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS blog_category (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(80) NOT NULL UNIQUE,
+    slug VARCHAR(120) NOT NULL UNIQUE,
+    description VARCHAR(500),
+    sort_order INT NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS blog_tag (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(80) NOT NULL UNIQUE,
+    slug VARCHAR(120) NOT NULL UNIQUE,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS blog_post (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(160) NOT NULL,
+    slug VARCHAR(180) NOT NULL UNIQUE,
+    summary VARCHAR(500),
+    content_markdown LONGTEXT NOT NULL,
+    content_html LONGTEXT,
+    cover_url VARCHAR(500),
+    status VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
+    featured BOOLEAN NOT NULL DEFAULT FALSE,
+    category_id BIGINT,
+    author_id BIGINT,
+    views_count BIGINT NOT NULL DEFAULT 0,
+    likes_count BIGINT NOT NULL DEFAULT 0,
+    published_at DATETIME,
+    version INT NOT NULL DEFAULT 1,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_post_category FOREIGN KEY (category_id) REFERENCES blog_category(id),
+    CONSTRAINT fk_post_author FOREIGN KEY (author_id) REFERENCES sys_user(id),
+    FULLTEXT KEY ft_post_search (title, summary, content_markdown)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS blog_comment (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    post_id BIGINT NOT NULL,
+    parent_id BIGINT,
+    nickname VARCHAR(60) NOT NULL,
+    email VARCHAR(120),
+    content VARCHAR(1000) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    ip_hash VARCHAR(128),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_comment_post FOREIGN KEY (post_id) REFERENCES blog_post(id) ON DELETE CASCADE,
+    CONSTRAINT fk_comment_parent FOREIGN KEY (parent_id) REFERENCES blog_comment(id) ON DELETE SET NULL,
+    INDEX idx_comment_post_status (post_id, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS sys_site_setting (
+    setting_key VARCHAR(100) PRIMARY KEY,
+    setting_value TEXT NOT NULL,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS sys_operation_log (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(80),
+    action VARCHAR(120) NOT NULL,
+    method VARCHAR(20) NOT NULL,
+    path VARCHAR(255) NOT NULL,
+    ip_hash VARCHAR(128),
+    detail TEXT,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_operation_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS blog_daily_stat (
+    stat_date DATE PRIMARY KEY,
+    views_count BIGINT NOT NULL DEFAULT 0,
+    likes_count BIGINT NOT NULL DEFAULT 0,
+    comments_count BIGINT NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

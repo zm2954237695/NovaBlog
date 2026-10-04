@@ -1,0 +1,2 @@
+import{d as a,o,e as s,a as n,t,q as i}from"./index-BgRGovvu.js";const c={class:"section-heading"},r={class:"eyebrow"},d={key:0},_=a({__name:"SectionHeading",props:{eyebrow:{},title:{},description:{}},setup(e){return(l,m)=>(o(),s("div",c,[n("span",r,t(e.eyebrow),1),n("h2",null,t(e.title),1),e.description?(o(),s("p",d,t(e.description),1)):i("",!0)]))}});export{_};
+//# sourceMappingURL=SectionHeading.vue_vue_type_script_setup_true_lang-CCh6w4Eq.js.map
